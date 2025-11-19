@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hockey Women's Junior World Cup 2025",
-  description: "Página para acreditaciones del mundial de hockey",
+  title: "Acreditaciones GO Latam",
+  description: "Página para acreditaciones del Go Latam",
 };
 
 export default function RootLayout({

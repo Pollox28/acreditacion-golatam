@@ -19,7 +19,7 @@ export default function Page() {
           <div className="relative w-full">
             {/* Banner */}
             <Image
-              src="/img/banner-golatam.jpg"
+              src="/img/banner-nuevo-golatam.jpg"
               alt="Acreditaciones de prensa GO Latam"
               width={1200}
               height={400}

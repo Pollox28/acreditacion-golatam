@@ -31,7 +31,6 @@ export default function AccreditationForm({
     correo: "",
     empresa: "",
   });
-  const [aceptaTyC, setAceptaTyC] = useState(false);
 
   async function manejarSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,34 +48,30 @@ export default function AccreditationForm({
 
     setCargando(true);
     try {
-  const { error: sbError } = await supabase.from("acreditaciones").insert({
-    area,
-    nombre: datos.nombre.trim(),
-    apellido: datos.apellido.trim(),
-    rut: datos.rut.trim(),
-    correo: datos.correo.trim().toLowerCase(),
-    empresa: datos.empresa.trim(),
-  });
+      const { error: sbError } = await supabase.from("acreditaciones").insert({
+        area,
+        nombre: datos.nombre.trim(),
+        apellido: datos.apellido.trim(),
+        rut: datos.rut.trim(),
+        correo: datos.correo.trim().toLowerCase(),
+        empresa: datos.empresa.trim(),
+      });
 
-  if (sbError) {
-    console.error("Supabase insert error:", sbError); // <— mira la consola
-    setError(sbError.message);                         // <— muestra el mensaje real
-    return;
+      if (sbError) {
+        console.error("Supabase insert error:", sbError);
+        setError(sbError.message);
+        return;
+      }
+
+      onSuccess(datos);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error desconocido.";
+      console.error("Catch error:", err);
+      setError(msg);
+    } finally {
+      setCargando(false);
+    }
   }
-
-  onSuccess(datos);
-} catch (err: unknown) {
-  const msg = err instanceof Error ? err.message : "Error desconocido.";
-  console.error("Catch error:", err);
-  setError(msg);
-}
-  if (!aceptaTyC) {
-  setError("Debes aceptar los términos y condiciones.");
-  return;
-}
-
-  }
-
 
   return (
     <section className="rounded-2xl border p-6">
@@ -143,40 +138,22 @@ export default function AccreditationForm({
             onChange={(e) => setDatos({ ...datos, empresa: e.target.value })}
           />
         </div>
-        {/* Términos y condiciones */}
-<div className="flex items-start gap-2">
-  <input
-    id="acepta-tyc"
-    type="checkbox"
-    className="mt-1 h-4 w-4 rounded border-gray-300"
-    checked={aceptaTyC}
-    onChange={(e) => setAceptaTyC(e.target.checked)}
-  />
-  <label htmlFor="acepta-tyc" className="text-sm text-gray-700">
-    Acepto los{" "}
-    <a
-      href="/docs/TerminosFEOCH.pdf"  // ← si usas URL externa, reemplázala aquí
-      target="_blank"
-      rel="noopener noreferrer"
-      className="underline"
-    >
-      términos y condiciones
-    </a>.
-  </label>
-</div>
-
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={cargando || !aceptaTyC}
+            disabled={cargando}
             className="rounded-xl bg-black text-white px-4 py-2 disabled:opacity-50"
           >
             {cargando ? "Enviando…" : "Enviar solicitud"}
           </button>
-          <button type="button" onClick={onCancel} className="rounded-xl border px-4 py-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border px-4 py-2"
+          >
             Volver
           </button>
         </div>
