@@ -45,10 +45,6 @@ export default function Page() {
 
             <AccreditationForm
               area={areaFija}
-              onCancel={() => {
-                // Antes volvías al selector de área.
-                // Ahora no hay nada a lo que "volver", así que lo dejamos vacío.
-              }}
               onSuccess={(datos: DatosBasicos) =>
                 setEnviado({ nombre: datos.nombre, apellido: datos.apellido })
               }

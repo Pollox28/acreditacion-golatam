@@ -8,18 +8,16 @@ import { supabase } from "@/lib/supabase";
 export type DatosBasicos = {
   nombre: string;
   apellido: string;
-  rut: string; // Puede ser pasaporte/DNI/RUT; sin validación de DV
+  rut: string;
   correo: string;
   empresa: string;
 };
 
 export default function AccreditationForm({
   area,
-  onCancel,
   onSuccess,
 }: {
   area: TipoArea;
-  onCancel: () => void;
   onSuccess: (datos: DatosBasicos) => void;
 }) {
   const [cargando, setCargando] = useState(false);
@@ -36,7 +34,7 @@ export default function AccreditationForm({
     e.preventDefault();
     setError(null);
 
-    // Validaciones mínimas (sin validar RUT/Documento)
+    // Validaciones mínimas
     if (!datos.nombre.trim() || !datos.apellido.trim()) {
       setError("Nombre y apellido son obligatorios.");
       return;
@@ -75,11 +73,8 @@ export default function AccreditationForm({
 
   return (
     <section className="rounded-2xl border p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h2 className="text-xl font-semibold">Datos para: {area}</h2>
-        <button className="text-sm underline" onClick={onCancel}>
-          Cambiar área
-        </button>
       </div>
 
       <form onSubmit={manejarSubmit} className="grid grid-cols-1 gap-4">
@@ -148,13 +143,6 @@ export default function AccreditationForm({
             className="rounded-xl bg-black text-white px-4 py-2 disabled:opacity-50"
           >
             {cargando ? "Enviando…" : "Enviar solicitud"}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-xl border px-4 py-2"
-          >
-            Volver
           </button>
         </div>
       </form>
