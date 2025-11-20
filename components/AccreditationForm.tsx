@@ -126,7 +126,7 @@ export default function AccreditationForm({
 
         {/* Empresa */}
         <div>
-          <label className="block text-sm font-medium mb-1">Empresa</label>
+          <label className="block text-sm font-medium mb-1">Medio o Plataforma</label>
           <input
             className="w-full rounded-xl border px-3 py-2"
             value={datos.empresa}

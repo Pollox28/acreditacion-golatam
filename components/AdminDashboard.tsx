@@ -13,12 +13,9 @@ export type Row = {
   empresa: string | null;
   status: "pendiente" | "aprobado" | "rechazado";
   created_at: string;
-  zona: "Zona 1" | "Zona 2" | "Zona 3" | null;   // 👈 NUEVO
 };
 
-
 const AREAS = ["Prensa"] as const;
-
 
 export default function AdminDashboard() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -29,20 +26,24 @@ export default function AdminDashboard() {
 
   const load = async () => {
     setLoading(true);
-    let query = supabase
-  .from("acreditaciones")
-  .select(
-    "id,area,nombre,apellido,rut,correo,empresa,status,created_at,zona" // 👈 agregado zona
-  )
-  .order("created_at", { ascending: false });
 
+    let query = supabase
+      .from("acreditaciones")
+      .select(
+        "id,area,nombre,apellido,rut,correo,empresa,status,created_at"
+      )
+      .order("created_at", { ascending: false });
 
     if (area !== "*") query = query.eq("area", area);
     if (status !== "*") query = query.eq("status", status);
 
     const { data, error } = await query;
-    if (error) console.error(error);
-    setRows((data || []) as Row[]);
+    if (error) {
+      console.error(error);
+      setRows([]);
+    } else {
+      setRows((data || []) as Row[]);
+    }
     setLoading(false);
   };
 
@@ -65,74 +66,41 @@ export default function AdminDashboard() {
       .from("acreditaciones")
       .update({ status: nuevo })
       .eq("id", id);
-    if (error) return alert(error.message);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     setRows((prev) =>
       prev.map((r) => (r.id === id ? { ...r, status: nuevo } : r))
     );
   };
 
-  const aprobarConZona = async (r: Row) => {
-  // Modal simple: prompt. (Si prefieres, luego lo cambiamos por un select UI.)
-  const input = prompt("Asigna zona (1, 2 o 3):", r.zona ? r.zona.replace("Zona ", "") : "");
-  if (!input) return;
-
-  const num = input.trim();
-  const mapa: Record<string, Row["zona"]> = { "1": "Zona 1", "2": "Zona 2", "3": "Zona 3" };
-  const zonaElegida = mapa[num];
-
-  if (!zonaElegida) {
-    alert("Valor inválido. Escribe 1, 2 o 3.");
-    return;
-  }
-
-  const { error } = await supabase
-    .from("acreditaciones")
-    .update({ status: "aprobado", zona: zonaElegida })
-    .eq("id", r.id);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  setRows(prev =>
-    prev.map(x => (x.id === r.id ? { ...x, status: "aprobado", zona: zonaElegida } : x))
-  );
-};
-
-const setZona = async (id: number, zona: Row["zona"]) => {
-  const { error } = await supabase
-    .from("acreditaciones")
-    .update({ zona })
-    .eq("id", id);
-
-  if (error) return alert(error.message);
-  setRows(prev => prev.map(r => (r.id === id ? { ...r, zona } : r)));
-};
-
   const exportCSV = () => {
     const headers = [
       "id",
-  "area",
-  "nombre",
-  "apellido",
-  "rut",
-  "correo",
-  "empresa",
-  "status",   // ← Estado antes
-  "zona",     // ← Zona después
-  "created_at",
+      "area",
+      "nombre",
+      "apellido",
+      "rut",
+      "correo",
+      "empresa",
+      "status",
+      "created_at",
     ];
-      const lines = [headers.join(",")].concat(
-    filtered.map((r) =>
-      headers
-        .map((h) => {
-          const value = (r as Record<string, unknown>)[h];
-          return JSON.stringify(value ?? "");
-        })
-        .join(",")
-    )
-  );
+
+    const lines = [headers.join(",")].concat(
+      filtered.map((r) =>
+        headers
+          .map((h) => {
+            const value = (r as Record<string, unknown>)[h];
+            return JSON.stringify(value ?? "");
+          })
+          .join(",")
+      )
+    );
+
     const csv = lines.join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -180,7 +148,7 @@ const setZona = async (id: number, zona: Row["zona"]) => {
         {/* Filtros */}
         <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
-            placeholder="Buscar por nombre, rut, correo, empresa"
+            placeholder="Buscar por nombre, rut, correo, medio/plataforma"
             className="rounded-xl border px-3 py-2"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -219,19 +187,17 @@ const setZona = async (id: number, zona: Row["zona"]) => {
         <div className="overflow-x-auto rounded-2xl border">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
-  <tr>
-    <th className="text-left p-3">Fecha</th>
-    <th className="text-left p-3">Área</th>
-    <th className="text-left p-3">Nombre</th>
-    <th className="text-left p-3">Documento</th>
-    <th className="text-left p-3">Correo</th>
-    <th className="text-left p-3">Empresa</th>
-    <th className="text-left p-3">Estado</th>  {/* ← primero Estado */}
-    <th className="text-left p-3">Zona</th>    {/* ← luego Zona */}
-    <th className="text-left p-3">Acciones</th>
-  </tr>
-</thead>
-
+              <tr>
+                <th className="text-left p-3">Fecha</th>
+                <th className="text-left p-3">Área</th>
+                <th className="text-left p-3">Nombre</th>
+                <th className="text-left p-3">Documento</th>
+                <th className="text-left p-3">Correo</th>
+                <th className="text-left p-3">Medio / plataforma</th>
+                <th className="text-left p-3">Estado</th>
+                <th className="text-left p-3">Acciones</th>
+              </tr>
+            </thead>
             <tbody>
               {loading ? (
                 <tr>
@@ -260,37 +226,17 @@ const setZona = async (id: number, zona: Row["zona"]) => {
                     <td className="p-3 whitespace-nowrap">
                       {r.empresa ?? "—"}
                     </td>
-                    {/* Estado */}
-<td className="p-3 whitespace-nowrap capitalize">
-  {r.status}
-</td>
-
-{/* Zona (select editable) */}
-<td className="p-3 whitespace-nowrap">
-  <select
-    className="rounded-lg border px-2 py-1"
-    value={r.zona ?? ""}
-    onChange={(e) => {
-      const val = e.target.value as Row["zona"] | "";
-      setZona(r.id, val === "" ? null : (val as Row["zona"]));
-    }}
-  >
-    <option value="">—</option>
-    <option value="Zona 1">Zona 1</option>
-    <option value="Zona 2">Zona 2</option>
-    <option value="Zona 3">Zona 3</option>
-  </select>
-</td>
-
+                    <td className="p-3 whitespace-nowrap capitalize">
+                      {r.status}
+                    </td>
                     <td className="p-3 whitespace-nowrap">
                       <div className="flex gap-2">
                         <button
-  onClick={() => aprobarConZona(r)}      // 👈 antes llamaba a setEstado(r.id, "aprobado")
-  className="rounded-lg border px-2 py-1 hover:bg-green-50"
->
-  Aprobar
-</button>
-
+                          onClick={() => setEstado(r.id, "aprobado")}
+                          className="rounded-lg border px-2 py-1 hover:bg-green-50"
+                        >
+                          Aprobar
+                        </button>
                         <button
                           onClick={() => setEstado(r.id, "rechazado")}
                           className="rounded-lg border px-2 py-1 hover:bg-red-50"
